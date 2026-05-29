@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>确认订单</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f5; padding-bottom: 100px; }
+        
+        .header {
+            background: linear-gradient(135deg, #e91e63 0%, #9c27b0 100%);
+            color: white; padding: 15px 20px;
+            display: flex; align-items: center; gap: 15px;
+            position: sticky; top: 0; z-index: 100;
+        }
+        .back-btn { font-size: 20px; cursor: pointer; }
+        .header-title { font-size: 18px; font-weight: 600; }
+        
+        .section {
+            background: white; margin: 15px; padding: 15px;
+            border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+        .section-title {
+            font-size: 16px; font-weight: 600; color: #333;
+            margin-bottom: 15px; padding-bottom: 10px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        /* 收货地址 */
+        .address-section {
+            display: flex; align-items: flex-start; gap: 15px;
+        }
+        .address-icon { font-size: 28px; }
+        .address-content { flex: 1; }
+        .address-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
+        .address-name { font-size: 16px; font-weight: 600; color: #333; }
+        .address-phone { font-size: 15px; color: #666; margin-left: 15px; }
+        .address-detail { font-size: 14px; color: #666; line-height: 1.5; }
+        .address-edit { font-size: 14px; color: #e91e63; }
+        
+        .address-form {
+            margin-top: 15px; padding-top: 15px;
+            border-top: 1px solid #f0f0f0;
+        }
+        .form-row { display: flex; gap: 10px; margin-bottom: 12px; }
+        .form-group { flex: 1; }
+        .form-label { font-size: 13px; color: #666; margin-bottom: 5px; display: block; }
+        .form-input {
+            width: 100%; padding: 10px 12px;
+            border: 1px solid #ddd; border-radius: 6px;
+            font-size: 14px; outline: none;
+        }
+        .form-input:focus { border-color: #e91e63; }
+        .form-textarea {
+            width: 100%; padding: 10px 12px;
+            border: 1px solid #ddd; border-radius: 6px;
+            font-size: 14px; outline: none;
+            resize: none; height: 80px;
+        }
+        .form-textarea:focus { border-color: #e91e63; }
+        
+        .order-items {
+            display: flex; flex-direction: column; gap: 10px;
+        }
+        .order-item {
+            display: flex; gap: 10px;
+        }
+        .item-img {
+            width: 60px; height: 60px;
+            background: linear-gradient(135deg, #e91e63 0%, #9c27b0 100%);
+            border-radius: 6px; flex-shrink: 0;
+        }
+        .item-img img { width: 100%; height: 100%; object-fit: cover; border-radius: 6px; }
+        .item-info { flex: 1; display: flex; flex-direction: column; justify-content: space-between; }
+        .item-name { font-size: 13px; color: #333; }
+        .item-bottom { display: flex; justify-content: space-between; }
+        .item-price { font-size: 14px; color: #e91e63; font-weight: 600; }
+        .item-qty { font-size: 13px; color: #999; }
+        
+        .payment-methods {
+            display: flex; flex-direction: column; gap: 10px;
+        }
+        .payment-item {
+            display: flex; align-items: center; gap: 15px;
+            padding: 15px;
+            background: #f8f8f8; border-radius: 8px;
+            cursor: pointer; border: 2px solid transparent;
+        }
+        .payment-item.active {
+            background: #fff5f7; border-color: #e91e63;
+        }
+        .payment-icon { font-size: 24px; }
+        .payment-text { flex: 1; }
+        .payment-name { font-size: 15px; color: #333; }
+        .payment-desc { font-size: 12px; color: #999; }
+        .payment-check { font-size: 20px; color: #e91e63; }
+        
+        .summary-row {
+            display: flex; justify-content: space-between;
+            margin-bottom: 12px; font-size: 14px; color: #666;
+        }
+        .summary-row.total {
+            margin-top: 15px; padding-top: 15px;
+            border-top: 1px solid #f0f0f0;
+            font-size: 16px; font-weight: 700; color: #333;
+        }
+        .summary-row.total .amount { color: #e91e63; font-size: 24px; }
+        .amount::before { content: '¥'; font-size: 16px; }
+        
+        .tips {
+            font-size: 12px; color: #999;
+            padding: 15px; text-align: center;
+            background: #fff5f7; margin: 15px;
+            border-radius: 8px;
+        }
+        
+        .bottom-bar {
+            position: fixed; bottom: 0; left: 0; right: 0;
+            background: white; padding: 15px;
+            display: flex; align-items: center; justify-content: space-between;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.08);
+        }
+        .total-info { display: flex; flex-direction: column; }
+        .total-label { font-size: 12px; color: #999; }
+        .total-amount { font-size: 24px; color: #e91e63; font-weight: 700; }
+        .total-amount::before { content: '¥'; font-size: 16px; }
+        .pay-btn {
+            padding: 15px 50px;
+            background: linear-gradient(135deg, #e91e63 0%, #9c27b0 100%);
+            border: none; border-radius: 25px;
+            color: white; font-size: 17px; font-weight: 600;
+            cursor: pointer;
+        }
+        .pay-btn.disabled { opacity: 0.5; cursor: not-allowed; }
+        
+        .loading-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5); display: flex;
+            align-items: center; justify-content: center;
+            z-index: 1000; display: none;
+        }
+        .loading-content {
+            background: white; padding: 30px 40px;
+            border-radius: 12px; text-align: center;
+        }
+        .loading-spinner {
+            width: 40px; height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #e91e63;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .loading-text { color: #666; font-size: 14px; }
+        
+        .toast {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.8); color: white; padding: 12px 24px;
+            border-radius: 8px; font-size: 14px; z-index: 1000;
+            opacity: 0; visibility: hidden; transition: all 0.3s;
+        }
+        .toast.show { opacity: 1; visibility: visible; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <span class="back-btn" onclick="goBack()">←</span>
+        <span class="header-title">确认订单</span>
+    </div>
+    
+    <div class="section">
+        <div class="section-title">📍 收货地址</div>
+        <div class="address-section">
+            <span class="address-icon">🏠</span>
+            <div class="address-content">
+                <div class="address-header">
+                    <div>
+                        <span class="address-name" id="contactName">请填写联系人</span>
+                        <span class="address-phone" id="contactPhone">请填写电话</span>
+                    </div>
+                    <span class="address-edit" onclick="toggleAddressForm()">编辑</span>
+                </div>
+                <div class="address-detail" id="addressDetail">请填写详细收货地址</div>
+            </div>
+        </div>
+        
+        <div class="address-form" id="addressForm" style="display: none;">
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">联系人</label>
+                    <input type="text" class="form-input" id="inputName" placeholder="请输入姓名">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">联系电话</label>
+                    <input type="tel" class="form-input" id="inputPhone" placeholder="请输入手机号">
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">收货地址</label>
+                <textarea class="form-textarea" id="inputAddress" placeholder="请输入详细地址（省/市/区/街道/门牌号）"></textarea>
+            </div>
+            <div style="display: flex; gap: 10px;">
+                <button class="pay-btn" style="flex: 1; padding: 12px;" onclick="saveAddress()">保存地址</button>
+                <button class="pay-btn disabled" style="flex: 1; padding: 12px; background: #f5f5f5; color: #666;" onclick="toggleAddressForm()">取消</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="section">
+        <div class="section-title">🛵 配送方式</div>
+        <div style="padding: 15px; background: #fff5f7; border-radius: 8px;">
+            <div style="font-size: 15px; font-weight: 600; color: #333; margin-bottom: 3px;">外卖配送</div>
+            <div style="font-size: 13px; color: #666;">预计30-60分钟送达，私密包装保护隐私</div>
+        </div>
+    </div>
+    
+    <div class="section">
+        <div class="section-title">🛒 商品清单</div>
+        <div class="order-items" id="orderItems"></div>
+    </div>
+    
+    <div class="section">
+        <div class="section-title">💳 支付方式</div>
+        <div class="payment-methods">
+            <div class="payment-item active">
+                <span class="payment-icon">💚</span>
+                <div class="payment-text">
+                    <div class="payment-name">微信支付</div>
+                    <div class="payment-desc">推荐使用</div>
+                </div>
+                <span class="payment-check">✓</span>
+            </div>
+        </div>
+    </div>
+    
+    <div class="section">
+        <div class="summary-row">
+            <span>商品数量</span>
+            <span id="itemCount">0 件</span>
+        </div>
+        <div class="summary-row">
+            <span>商品总价</span>
+            <span class="amount" id="subtotal">0.00</span>
+        </div>
+        <div class="summary-row">
+            <span>配送费</span>
+            <span class="amount" id="shipping">5.00</span>
+        </div>
+        <div class="summary-row total">
+            <span>应付金额</span>
+            <span class="amount" id="total">0.00</span>
+        </div>
+    </div>
+    
+    <div class="tips">
+        💡 温馨提示：商品采用私密包装，保护您的隐私安全
+    </div>
+    
+    <div class="bottom-bar">
+        <div class="total-info">
+            <span class="total-label">应付:</span>
+            <span class="total-amount" id="bottomTotal">0.00</span>
+        </div>
+        <button class="pay-btn" onclick="handlePay()">立即支付</button>
+    </div>
+    
+    <div class="loading-overlay" id="loading">
+        <div class="loading-content">
+            <div class="loading-spinner"></div>
+            <div class="loading-text" id="loadingText">正在支付...</div>
+        </div>
+    </div>
+    
+    <div class="toast" id="toast"></div>
+
+    <script src="data.js"></script>
+    <script>
+        function renderOrderItems() {
+            const cart = getCart();
+            if (cart.length === 0) {
+                window.location.href = 'index.html';
+                return;
+            }
+            
+            const container = document.getElementById('orderItems');
+            container.innerHTML = cart.map(item => `
+                <div class="order-item">
+                    <div class="item-img">
+                        <img src="${item.image}" alt="${item.name}">
+                    </div>
+                    <div class="item-info">
+                        <div class="item-name">${item.name}</div>
+                        <div class="item-bottom">
+                            <span class="item-price">¥${item.price}</span>
+                            <span class="item-qty">x${item.quantity}</span>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+            
+            updateSummary();
+        }
+        
+        function updateSummary() {
+            const cart = getCart();
+            const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+            const shipping = 5;
+            const total = subtotal + shipping;
+            const itemCount = cart.reduce((sum, item) => sum + item.quantity, 0);
+            
+            document.getElementById('itemCount').textContent = itemCount + ' 件';
+            document.getElementById('subtotal').textContent = subtotal.toFixed(2);
+            document.getElementById('shipping').textContent = shipping.toFixed(2);
+            document.getElementById('total').textContent = total.toFixed(2);
+            document.getElementById('bottomTotal').textContent = total.toFixed(2);
+        }
+        
+        function toggleAddressForm() {
+            const form = document.getElementById('addressForm');
+            form.style.display = form.style.display === 'none' ? 'block' : 'none';
+        }
+        
+        function saveAddress() {
+            const name = document.getElementById('inputName').value.trim();
+            const phone = document.getElementById('inputPhone').value.trim();
+            const address = document.getElementById('inputAddress').value.trim();
+            
+            if (!name) {
+                showToast('请填写联系人姓名');
+                return;
+            }
+            if (!phone || !/^1[3-9]\d{9}$/.test(phone)) {
+                showToast('请填写正确的手机号');
+                return;
+            }
+            if (!address) {
+                showToast('请填写收货地址');
+                return;
+            }
+            
+            document.getElementById('contactName').textContent = name;
+            document.getElementById('contactPhone').textContent = phone;
+            document.getElementById('addressDetail').textContent = address;
+            
+            localStorage.setItem('delivery_address', JSON.stringify({ name, phone, address }));
+            toggleAddressForm();
+            showToast('地址保存成功');
+        }
+        
+        function loadAddress() {
+            const saved = localStorage.getItem('delivery_address');
+            if (saved) {
+                const addr = JSON.parse(saved);
+                document.getElementById('contactName').textContent = addr.name;
+                document.getElementById('contactPhone').textContent = addr.phone;
+                document.getElementById('addressDetail').textContent = addr.address;
+                document.getElementById('inputName').value = addr.name;
+                document.getElementById('inputPhone').value = addr.phone;
+                document.getElementById('inputAddress').value = addr.address;
+            }
+        }
+        
+        function handlePay() {
+            const name = document.getElementById('contactName').textContent;
+            const phone = document.getElementById('contactPhone').textContent;
+            const address = document.getElementById('addressDetail').textContent;
+            
+            if (name === '请填写联系人' || phone === '请填写电话' || address === '请填写详细收货地址') {
+                showToast('请先填写收货地址');
+                return;
+            }
+            
+            const loading = document.getElementById('loading');
+            const loadingText = document.getElementById('loadingText');
+            
+            loading.style.display = 'flex';
+            
+            setTimeout(() => {
+                loadingText.textContent = '支付成功...';
+            }, 1500);
+            
+            setTimeout(() => {
+                clearCart();
+                const orderId = getOrderId();
+                window.location.href = `success.html?id=${orderId}`;
+            }, 3000);
+        }
+        
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            toast.textContent = msg;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2000);
+        }
+        
+        function goBack() {
+            window.history.back();
+        }
+        
+        renderOrderItems();
+        loadAddress();
+    </script>
+</body>
+</html>
